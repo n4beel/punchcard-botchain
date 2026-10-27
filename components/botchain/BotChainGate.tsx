@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useAccount, useChainId, useConnect, useSwitchChain } from "wagmi";
-import Panel from "@/components/ui/Panel";
 import Button from "@/components/ui/Button";
 import ConnectButton from "@/components/ui/ConnectButton";
 import { activeBotChain, botChainById, faucetUrl, isActiveChain, isBotChainId } from "@/lib/botchain/chain";
@@ -166,18 +165,17 @@ export default function BotChainGate({
 
 function Notice({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mx-auto w-full" style={{ maxWidth: "480px" }}>
-      <Panel>
+    <div className="mx-auto w-full max-w-[480px]">
+      <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] p-5 rounded-md shadow-sm">
         <p
-          className="text-[11px] uppercase tracking-[0.04em] mb-2"
-          style={{ color: "var(--text-secondary)" }}
+          className="text-[12px] font-semibold uppercase tracking-[0.04em] mb-2 text-[var(--text-secondary)] font-heading"
         >
           {title}
         </p>
-        <div className="text-[12px] leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+        <div className="text-[13px] leading-relaxed text-[var(--text-muted)]">
           {children}
         </div>
-      </Panel>
+      </div>
     </div>
   );
 }
