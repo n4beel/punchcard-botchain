@@ -30,11 +30,19 @@ export default function StampScreenPage() {
   const rawId = params?.id as string;
   const programId = rawId ? BigInt(rawId) : 0n;
 
-  const { address, fetchProgram, fetchCard, stampCustomer, isTransacting } = usePunchcard();
+  const {
+    address,
+    fetchProgram,
+    fetchCard,
+    fetchBlockTimestamp,
+    stampCustomer,
+    isTransacting,
+  } = usePunchcard();
 
   const [program, setProgram] = useState<ProgramData | null>(null);
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerCard, setCustomerCard] = useState<CardData | null>(null);
+  const [chainTimestamp, setChainTimestamp] = useState<number | null>(null);
   const [isLoadingProg, setIsLoadingProg] = useState(true);
   const [isLoadingCard, setIsLoadingCard] = useState(false);
 
@@ -59,12 +67,16 @@ export default function StampScreenPage() {
     }
     try {
       setIsLoadingCard(true);
-      const c = await fetchCard(programId, custAddr as Address);
+      const [c, ts] = await Promise.all([
+        fetchCard(programId, custAddr as Address),
+        fetchBlockTimestamp(),
+      ]);
       setCustomerCard(c ?? { stamps: 0, lastStamp: 0n });
+      setChainTimestamp(ts);
     } finally {
       setIsLoadingCard(false);
     }
-  }, [programId, fetchCard]);
+  }, [programId, fetchCard, fetchBlockTimestamp]);
 
   useEffect(() => {
     if (isAddress(customerAddress)) {
@@ -106,7 +118,9 @@ export default function StampScreenPage() {
   const stamps = customerCard ? customerCard.stamps : 0;
   const lastStamp = customerCard ? customerCard.lastStamp : 0n;
   const isFull = customerCard ? customerCard.stamps >= program.needed : false;
-  const cooldownActive = customerCard ? isCooldownActive(lastStamp, program.cooldown) : false;
+  const cooldownActive = customerCard
+    ? isCooldownActive(lastStamp, program.cooldown, chainTimestamp ?? undefined)
+    : false;
   const nextDate = customerCard ? nextStampAt(lastStamp, program.cooldown) : null;
 
   const canStamp =

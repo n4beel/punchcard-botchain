@@ -111,6 +111,17 @@ export function usePunchcard() {
     [publicClient, deployed, deployment.address]
   );
 
+  // Read current chain block timestamp
+  const fetchBlockTimestamp = useCallback(async (): Promise<number> => {
+    if (!publicClient) return Math.floor(Date.now() / 1000);
+    try {
+      const block = await publicClient.getBlock();
+      return Number(block.timestamp);
+    } catch {
+      return Math.floor(Date.now() / 1000);
+    }
+  }, [publicClient]);
+
   // Read pending balance
   const fetchPending = useCallback(
     async (who: `0x${string}`): Promise<bigint> => {
@@ -337,6 +348,7 @@ export function usePunchcard() {
     fetchLatestPrograms,
     fetchProgram,
     fetchCard,
+    fetchBlockTimestamp,
     fetchPending,
     createProgram,
     fundProgram,
