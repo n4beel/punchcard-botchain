@@ -10,8 +10,8 @@ contract Punchcard {
     // --- Limits ---
     uint32 public constant MIN_NEEDED = 2;
     uint32 public constant MAX_NEEDED = 30;
-    uint32 public constant MIN_COOLDOWN = 1 hours; // 3600 seconds
-    uint32 public constant MAX_COOLDOWN = 7 days;  // 604800 seconds
+    uint32 public constant MIN_COOLDOWN = 3600;   // 1 hour
+    uint32 public constant MAX_COOLDOWN = 604800; // 7 days
     uint256 public constant MAX_NAME_BYTES = 40;
     uint256 public constant MAX_BATCH_VIEW = 50;
 
