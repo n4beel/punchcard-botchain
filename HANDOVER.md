@@ -225,3 +225,45 @@ Executed via `node scripts/browser-walkthrough.mjs` against headless Chrome via 
 
 ## 5. Known Deviations
 None. All contracts, invariants, mutations, archetype rules, UI constraints, copy requirements, and accessibility guidelines have been met in full.
+
+---
+
+## Feedback round 1 (Part A Remediation)
+
+### 1. Network Pinning & Transaction Layer
+- Integrated `lib/useChainWrite.ts` and `test/lint/chain-write-pinned.test.ts`. Writes are pinned to `activeBotChain.id`.
+- Mounted `<WrongNetworkBar />` inside `ToastProvider` in `app/layout.tsx`.
+- Updated `components/botchain/NetworkBadge.tsx` with clickable network switch button.
+- Updated `lib/errors.ts` to describe chain mismatches with standard copy: `"Your wallet is on a different network. Switch it to <activeBotChain.name>, then try again."`.
+- Pinned `usePublicClient({ chainId: activeBotChain.id })` and `getDeployment(activeBotChain.id)` in `lib/usePunchcard.ts`.
+
+### 2. Amount Inputs & Decimal Handling
+- Replaced text inputs with `type="number" step="any" min="0"` across all BOT amount entry points:
+  - `components/punchcard/LoyaltyCard.tsx` (top up inline form)
+  - `app/new/page.tsx` (reward and opening pool inputs)
+  - `app/p/[id]/page.tsx` (top up pool input)
+
+### 3. Distinct Styling & Archetype Z Identity
+- Redesigned `components/ui/Button.tsx` specifically for Archetype Z · Card stack: tactile card button with punch accents, box shadows, and variants (`primary`, `secondary`, `ghost`, `danger`, `punch`).
+- Reduced similarity against `template/components/ui/Button.tsx` from 1.0 down to **0.185** (threshold $\le 0.70$).
+- `python3 scripts/check-distinct.py punchcard` exits 0 with 0 findings.
+
+### 4. Deploy Script Verification
+- `contracts/script/Deploy.s.sol` wired to deploy `new Punchcard()`.
+- Verified execution with `forge script` against local anvil: printed non-zero address `0x5FbDB2315678afecb367f032d93F642f64180aa3` with 14,372 characters of bytecode confirmed via `cast code`.
+
+### 5. Invariant & Protocol Limits
+- `foundry.toml` configured with `[invariant] runs = 256, depth = 128, fail_on_revert = false`.
+- `README.md` updated with exact protocol limits taken from contract constants (`MIN_NEEDED = 2`, `MAX_NEEDED = 30`, `MIN_COOLDOWN = 3600`, `MAX_COOLDOWN = 604800`, `MAX_NAME_BYTES = 40`, `MAX_BATCH_VIEW = 50`).
+
+### 6. Gates & Test Suite
+- `python3 scripts/check-ui-contract.py punchcard`: PASSED (0 findings)
+- `python3 scripts/check-tokens.py punchcard`: PASSED (0 undefined tokens)
+- `python3 scripts/check-honesty.py punchcard`: PASSED (0 findings)
+- `python3 scripts/check-distinct.py punchcard`: PASSED (0 problem pairs)
+- `forge test`: 21 passed (18 unit/fuzz, 3 invariant at 256 runs $\times$ 128 depth)
+- `python3 scripts/mutation-check.py punchcard`: 24 of 25 killed, 1 surviving equivalent mutant documented in `contracts/DECISIONS.md`
+- `npm test`: 10 passed (61 unit and lint tests)
+- `npx tsc --noEmit`: 0 errors
+- `npm run test:integration`: 2 passed (33 integration tests)
+

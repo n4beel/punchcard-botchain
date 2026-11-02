@@ -1,26 +1,24 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { assertActiveChain, checkedWrite, waitSuccess } from "@/lib/useChainWrite";
 import {
   usePublicClient,
   useWalletClient,
-  useChainId,
   useAccount,
 } from "wagmi";
 import { punchcardAbi } from "./botchain/abi";
 import { getDeployment, isDeployed } from "./botchain/deployment";
-import { type BotChainId, isBotChainId } from "./botchain/chain";
+import { activeBotChain } from "./botchain/chain";
 import { describeError } from "./errors";
 import { useToast } from "@/components/ui/Toast";
 import type { ProgramData, CardData } from "./punchcard";
 
 export function usePunchcard() {
-  const chainId = useChainId();
-  const currentChainId: BotChainId = isBotChainId(chainId) ? chainId : 968;
-  const deployment = getDeployment(currentChainId);
-  const deployed = isDeployed(currentChainId);
+  const deployment = getDeployment(activeBotChain.id);
+  const deployed = isDeployed(activeBotChain.id);
 
-  const publicClient = usePublicClient(); // stable-hook-result
+  const publicClient = usePublicClient({ chainId: activeBotChain.id }); // stable-hook-result
   const { data: walletClient } = useWalletClient();
   const { address } = useAccount();
   const { toast } = useToast();
@@ -157,7 +155,8 @@ export function usePunchcard() {
       }
       try {
         setIsTransacting(true);
-        const hash = await walletClient.writeContract({
+        await assertActiveChain(walletClient);
+        const hash = await checkedWrite(walletClient, publicClient, {
           address: deployment.address,
           abi: punchcardAbi,
           functionName: "create",
@@ -166,7 +165,7 @@ export function usePunchcard() {
         });
 
         toast("info", "Transaction sent: creating programme...");
-        await publicClient.waitForTransactionReceipt({ hash });
+        await waitSuccess(publicClient, hash);
 
         // Retrieve created id from programCount
         const count = await publicClient.readContract({
@@ -197,7 +196,8 @@ export function usePunchcard() {
       }
       try {
         setIsTransacting(true);
-        const hash = await walletClient.writeContract({
+        await assertActiveChain(walletClient);
+        const hash = await checkedWrite(walletClient, publicClient, {
           address: deployment.address,
           abi: punchcardAbi,
           functionName: "fund",
@@ -206,7 +206,7 @@ export function usePunchcard() {
         });
 
         toast("info", "Transaction sent: topping up pool...");
-        await publicClient.waitForTransactionReceipt({ hash });
+        await waitSuccess(publicClient, hash);
         toast("success", "Pool topped up successfully!");
         return true;
       } catch (err) {
@@ -229,7 +229,8 @@ export function usePunchcard() {
       }
       try {
         setIsTransacting(true);
-        const hash = await walletClient.writeContract({
+        await assertActiveChain(walletClient);
+        const hash = await checkedWrite(walletClient, publicClient, {
           address: deployment.address,
           abi: punchcardAbi,
           functionName: "stamp",
@@ -237,7 +238,7 @@ export function usePunchcard() {
         });
 
         toast("info", "Transaction sent: stamping customer card...");
-        await publicClient.waitForTransactionReceipt({ hash });
+        await waitSuccess(publicClient, hash);
         toast("success", "Stamp applied successfully!");
         return true;
       } catch (err) {
@@ -260,7 +261,8 @@ export function usePunchcard() {
       }
       try {
         setIsTransacting(true);
-        const hash = await walletClient.writeContract({
+        await assertActiveChain(walletClient);
+        const hash = await checkedWrite(walletClient, publicClient, {
           address: deployment.address,
           abi: punchcardAbi,
           functionName: "redeem",
@@ -268,7 +270,7 @@ export function usePunchcard() {
         });
 
         toast("info", "Transaction sent: cashing in card...");
-        await publicClient.waitForTransactionReceipt({ hash });
+        await waitSuccess(publicClient, hash);
         toast("success", "Reward cashed in! Check your earnings on /me.");
         return true;
       } catch (err) {
@@ -291,7 +293,8 @@ export function usePunchcard() {
       }
       try {
         setIsTransacting(true);
-        const hash = await walletClient.writeContract({
+        await assertActiveChain(walletClient);
+        const hash = await checkedWrite(walletClient, publicClient, {
           address: deployment.address,
           abi: punchcardAbi,
           functionName: "releaseFree",
@@ -299,7 +302,7 @@ export function usePunchcard() {
         });
 
         toast("info", "Transaction sent: releasing free pool...");
-        await publicClient.waitForTransactionReceipt({ hash });
+        await waitSuccess(publicClient, hash);
         toast("success", "Free pool released to your earnings!");
         return true;
       } catch (err) {
@@ -321,14 +324,15 @@ export function usePunchcard() {
     }
     try {
       setIsTransacting(true);
-      const hash = await walletClient.writeContract({
+      await assertActiveChain(walletClient);
+      const hash = await checkedWrite(walletClient, publicClient, {
         address: deployment.address,
         abi: punchcardAbi,
         functionName: "withdraw",
       });
 
       toast("info", "Transaction sent: withdrawing BOT to wallet...");
-      await publicClient.waitForTransactionReceipt({ hash });
+      await waitSuccess(publicClient, hash);
       toast("success", "Withdrawal complete! Funds are in your wallet.");
       return true;
     } catch (err) {

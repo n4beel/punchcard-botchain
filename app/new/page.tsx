@@ -164,7 +164,9 @@ export default function NewProgramPage() {
             <div className="relative">
               <input
                 id="prog-reward"
-                type="text"
+                type="number"
+                step="any"
+                min="0"
                 value={reward}
                 onChange={(e) => setReward(e.target.value)}
                 placeholder="0.1"
@@ -216,7 +218,9 @@ export default function NewProgramPage() {
             <div className="relative">
               <input
                 id="prog-pool"
-                type="text"
+                type="number"
+                step="any"
+                min="0"
                 value={openingPool}
                 onChange={(e) => setOpeningPool(e.target.value)}
                 placeholder="0.5"

@@ -28,6 +28,15 @@ When the customer reaches the required stamp count, they cash in their full card
 
 ## Contract Architecture (`contracts/src/Punchcard.sol`)
 
+### Protocol Limits (from contract constants)
+- `MIN_NEEDED`: 2 stamps
+- `MAX_NEEDED`: 30 stamps
+- `MIN_COOLDOWN`: 3,600 seconds (1 hour)
+- `MAX_COOLDOWN`: 604,800 seconds (7 days)
+- `MAX_NAME_BYTES`: 40 bytes
+- `MAX_BATCH_VIEW`: 50 programmes per page
+
+### Core Methods
 - `create(name, needed, reward, cooldown) payable`: Creates a programme.
 - `fund(id) payable`: Adds BOT to reward pool.
 - `stamp(id, customer)`: Shop stamps customer address if cooldown expired and card not full.

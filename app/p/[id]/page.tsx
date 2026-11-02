@@ -299,7 +299,9 @@ export default function ProgramDetailPage() {
             <div className="space-y-4 pt-2">
               <form onSubmit={handleTopUp} className="flex items-center gap-2">
                 <input
-                  type="text"
+                  type="number"
+                  step="any"
+                  min="0"
                   placeholder="0.5"
                   value={topUpAmount}
                   onChange={(e) => setTopUpAmount(e.target.value)}

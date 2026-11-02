@@ -290,7 +290,9 @@ export default function LoyaltyCard({
               {/* Fund inline form */}
               <form onSubmit={handleFund} className="flex items-center gap-2 pt-1">
                 <input
-                  type="text"
+                  type="number"
+                  step="any"
+                  min="0"
                   placeholder="0.5 BOT"
                   value={fundAmount}
                   onClick={(e) => e.stopPropagation()}
