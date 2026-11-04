@@ -14,7 +14,6 @@ import {
   freePool,
   formatCooldown,
   formatReward,
-  canRedeem,
   isCooldownActive,
   nextStampAt,
 } from "@/lib/punchcard";
@@ -104,7 +103,7 @@ export default function ProgramDetailPage() {
   const isShop = address && address.toLowerCase() === program.shop.toLowerCase();
   const stamps = card ? card.stamps : 0;
   const lastStamp = card ? card.lastStamp : 0n;
-  const readyToRedeem = canRedeem(card ?? { stamps: 0, lastStamp: 0n }, program);
+  const readyToRedeem = stamps >= program.needed;
   const poolSuffices = program.pool >= program.reward;
   const cooldownActive = isCooldownActive(lastStamp, program.cooldown);
   const nextDate = nextStampAt(lastStamp, program.cooldown);

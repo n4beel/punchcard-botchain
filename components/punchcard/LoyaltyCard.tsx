@@ -10,7 +10,6 @@ import {
   freePool,
   formatCooldown,
   formatReward,
-  canRedeem,
   isCooldownActive,
   nextStampAt,
 } from "@/lib/punchcard";
@@ -45,7 +44,7 @@ export default function LoyaltyCard({
   const stamps = card ? card.stamps : 0;
   const lastStamp = card ? card.lastStamp : 0n;
   const isShop = connectedAddress && connectedAddress.toLowerCase() === program.shop.toLowerCase();
-  const readyToRedeem = canRedeem(card ?? { stamps: 0, lastStamp: 0n }, program);
+  const readyToRedeem = stamps >= program.needed;
   const poolSuffices = program.pool >= program.reward;
   const cooldownActive = isCooldownActive(lastStamp, program.cooldown);
   const nextDate = nextStampAt(lastStamp, program.cooldown);
@@ -105,17 +104,14 @@ export default function LoyaltyCard({
       `}
     >
       <div
-        className={`
-          relative w-full rounded-2xl border-2 border-[var(--border-default)] bg-[var(--bg-surface)]
-          transform-style-3d flip-transition overflow-hidden
-          ${isFlipped ? "rotate-y-180" : ""}
-        `}
+        className="relative w-full rounded-2xl border-2 border-[var(--border-default)] bg-[var(--bg-surface)] overflow-hidden"
         style={{
           boxShadow: "inset 0 1px 0 0 rgba(255,255,255,0.8)",
         }}
       >
         {/* FRONT SIDE (Customer Loyalty Card) */}
-        <div className={`p-5 sm:p-6 flex flex-col justify-between ${isFlipped ? "invisible pointer-events-none" : ""}`}>
+        {!(isShop && isFlipped) && (
+        <div className="p-5 sm:p-6 flex flex-col justify-between">
           {/* Card Header */}
           <div className="flex items-start justify-between gap-3 pb-4 border-b border-dashed border-[var(--border-default)]">
             <div className="min-w-0 flex-1">
@@ -141,14 +137,39 @@ export default function LoyaltyCard({
           </div>
 
           {/* Stamp Grid */}
-          <div className="py-6 px-1">
-            <StampGrid stamps={stamps} needed={program.needed} size={program.needed > 15 ? "sm" : "md"} />
-          </div>
+          {isShop ? (
+            <div className="py-6 px-1 text-[13px] text-[var(--text-muted)] mono">
+              {program.needed} stamps per card · {program.ready} full {program.ready === 1 ? "card" : "cards"} waiting to cash in
+            </div>
+          ) : (
+            <div className="py-6 px-1">
+              <StampGrid stamps={stamps} needed={program.needed} size={program.needed > 15 ? "sm" : "md"} />
+            </div>
+          )}
+
+          {!isShop && connectedAddress && !readyToRedeem && (
+            <p className="text-[12px] text-[var(--text-muted)] pb-3 flex flex-wrap items-center gap-2">
+              <span>To get a stamp, show the shop your wallet address:</span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard?.writeText(connectedAddress).catch(() => {});
+                }}
+                className="mono px-2 py-0.5 rounded border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                title="Copy your address"
+              >
+                {connectedAddress.slice(0, 6)}…{connectedAddress.slice(-4)} · copy
+              </button>
+            </p>
+          )}
 
           {/* Card Footer / Action */}
           <div className="pt-4 border-t border-dashed border-[var(--border-default)] flex flex-wrap items-center justify-between gap-3">
             <div className="text-[13px] text-[var(--text-secondary)]">
-              {readyToRedeem ? (
+              {isShop ? (
+                <span>Your programme. Customers show you their wallet address; you stamp it.</span>
+              ) : readyToRedeem ? (
                 poolSuffices ? (
                   <span className="text-[var(--success)] font-semibold flex items-center gap-1.5">
                     <span className="inline-block w-2 h-2 rounded-full bg-[var(--success)]" />
@@ -185,6 +206,16 @@ export default function LoyaltyCard({
               )}
 
               {isShop && (
+                <Link
+                  href={`/p/${program.id}/stamp`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="px-3.5 py-2 rounded-md font-heading font-semibold text-[13px] bg-[var(--accent)] text-[var(--accent-ink)] hover:opacity-90 transition-all shadow-xs"
+                >
+                  Stamp a customer
+                </Link>
+              )}
+
+              {isShop && (
                 <button
                   type="button"
                   onClick={(e) => {
@@ -194,21 +225,17 @@ export default function LoyaltyCard({
                   className="px-3 py-1.5 rounded-md text-[12px] font-medium border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all flex items-center gap-1"
                 >
                   <span>Shop controls</span>
-                  <span aria-hidden="true">↺</span>
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* BACK SIDE (Shop Manager Flip) */}
-        {isShop && (
-          <div
-            className={`
-              absolute inset-0 p-5 sm:p-6 flex flex-col justify-between bg-[var(--bg-surface)] rotate-y-180 backface-hidden
-              ${!isFlipped ? "invisible pointer-events-none" : ""}
-            `}
-          >
+        )}
+
+        {/* BACK SIDE (Shop Manager) */}
+        {isShop && isFlipped && (
+          <div className="p-5 sm:p-6 flex flex-col justify-between bg-[var(--bg-surface)]">
             {/* Header */}
             <div className="flex items-start justify-between gap-3 pb-3 border-b border-dashed border-[var(--border-default)]">
               <div>
@@ -228,8 +255,7 @@ export default function LoyaltyCard({
                 }}
                 className="px-3 py-1.5 rounded-md text-[12px] font-medium border border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all flex items-center gap-1"
               >
-                <span>Front</span>
-                <span aria-hidden="true">↺</span>
+                <span>Back to card</span>
               </button>
             </div>
 

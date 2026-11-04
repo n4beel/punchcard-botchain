@@ -16,15 +16,6 @@ import {
   nextStampAt,
 } from "@/lib/punchcard";
 
-// Preset customer test accounts from local stack seeder
-const QUICK_ACCOUNTS: { label: string; address: Address }[] = [
-  { label: "Customer A (Bob)", address: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" },
-  { label: "Customer B (Charlie)", address: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC" },
-  { label: "Customer C (Dave)", address: "0x90F79bf6EB2c4f870365E785982E1f101E93b906" },
-  { label: "Customer D (Eve)", address: "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65" },
-  { label: "Outsider (Frank)", address: "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc" },
-];
-
 export default function StampScreenPage() {
   const params = useParams();
   const rawId = params?.id as string;
@@ -169,7 +160,7 @@ export default function StampScreenPage() {
           </div>
         )}
 
-        {/* Customer Address Input & Quick Select */}
+        {/* Customer Address Input */}
         <div className="p-5 sm:p-6 rounded-2xl border-2 border-[var(--border-default)] bg-[var(--bg-surface)] card-lift-shadow space-y-4">
           <div>
             <label
@@ -178,6 +169,9 @@ export default function StampScreenPage() {
             >
               Customer Wallet Address
             </label>
+            <p className="text-[12px] text-[var(--text-muted)] mb-2">
+              The customer opens their card and copies their wallet address (or shows it to you). Paste it here, check the card, then stamp.
+            </p>
             <input
               id="cust-addr"
               type="text"
@@ -187,29 +181,6 @@ export default function StampScreenPage() {
               disabled={!isShopOwner}
               className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-base)] text-[var(--text-primary)] font-mono text-[13px] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
-          </div>
-
-          {/* Quick select presets */}
-          <div>
-            <p className="text-[11px] font-heading font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">
-              Quick Select Test Customers:
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {QUICK_ACCOUNTS.map((acc) => (
-                <button
-                  key={acc.address}
-                  type="button"
-                  onClick={() => setCustomerAddress(acc.address)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-mono border transition-all ${
-                    customerAddress.toLowerCase() === acc.address.toLowerCase()
-                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-ink)] font-bold shadow-xs"
-                      : "border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                  }`}
-                >
-                  {acc.label}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Live Customer Card Preview */}
